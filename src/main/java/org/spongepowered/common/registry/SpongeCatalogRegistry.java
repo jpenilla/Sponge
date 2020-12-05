@@ -160,8 +160,10 @@ import org.spongepowered.api.service.ban.BanType;
 import org.spongepowered.api.service.economy.Currency;
 import org.spongepowered.api.service.economy.account.AccountDeletionResultType;
 import org.spongepowered.api.util.Tuple;
+import org.spongepowered.api.world.HeightType;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.biome.BiomeType;
+import org.spongepowered.api.world.chunk.ChunkState;
 import org.spongepowered.api.world.difficulty.Difficulty;
 import org.spongepowered.api.world.dimension.DimensionType;
 import org.spongepowered.api.world.portal.PortalType;
@@ -204,6 +206,7 @@ import org.spongepowered.common.registry.builtin.sponge.FireworkShapeStreamGener
 import org.spongepowered.common.registry.builtin.sponge.GeneratorModifierTypeRegistrar;
 import org.spongepowered.common.registry.builtin.sponge.GoalExecutorTypeStreamGenerator;
 import org.spongepowered.common.registry.builtin.sponge.GoalTypeStreamGenerator;
+import org.spongepowered.common.registry.builtin.sponge.HeightTypeStreamGenerator;
 import org.spongepowered.common.registry.builtin.sponge.HorseColorStreamGenerator;
 import org.spongepowered.common.registry.builtin.sponge.HorseStyleStreamGenerator;
 import org.spongepowered.common.registry.builtin.sponge.IAttributeTypeRegistrar;
@@ -229,6 +232,7 @@ import org.spongepowered.common.registry.builtin.sponge.WoodTypeStreamGenerator;
 import org.spongepowered.common.registry.builtin.sponge.WorldArchetypeStreamGenerator;
 import org.spongepowered.common.registry.builtin.vanilla.BiomeSupplier;
 import org.spongepowered.common.registry.builtin.vanilla.BlockSupplier;
+import org.spongepowered.common.registry.builtin.vanilla.ChunkStateSupplier;
 import org.spongepowered.common.registry.builtin.vanilla.ContainerTypeSupplier;
 import org.spongepowered.common.registry.builtin.vanilla.EffectSupplier;
 import org.spongepowered.common.registry.builtin.vanilla.EnchantmentSupplier;
@@ -369,7 +373,7 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
         return stream;
     }
 
-    public <T extends CatalogType, E extends T> SpongeCatalogRegistry registerCatalogAndSupplier(final Class<E> catalogClass, final String suggestedId, Supplier<E> supplier) {
+    public <T extends CatalogType, E extends T> SpongeCatalogRegistry registerCatalogAndSupplier(final Class<E> catalogClass, final String suggestedId, final Supplier<E> supplier) {
         Objects.requireNonNull(supplier);
 
         // Typically this isn't safe but for fake vanilla registries we can do it
@@ -535,11 +539,11 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
         this.callRegisterCatalogEvents(cause, game, this.dynamicCatalogs);
     }
 
-    public void callDataPackRegisterCatalogEvents(Cause cause, Game game) {
+    public void callDataPackRegisterCatalogEvents(final Cause cause, final Game game) {
         this.callRegisterCatalogEvents(cause, game, this.datapackCatalogues);
     }
 
-    private void callRegisterCatalogEvents(final Cause cause, final Game game, List<Class<? extends CatalogType>> catalogs) {
+    private void callRegisterCatalogEvents(final Cause cause, final Game game, final List<Class<? extends CatalogType>> catalogs) {
         for (final Class<? extends CatalogType> dynamicCatalog : catalogs) {
             final TypeToken<? extends CatalogType> token = TypeToken.get(dynamicCatalog);
             game.getEventManager().post(new RegisterCatalogEventImpl<>(cause, game, (TypeToken<CatalogType>) token));
@@ -640,6 +644,7 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
             .generateRegistry(TeleportHelperFilter.class, ResourceKey.sponge("teleport_helper_filter"), TeleportHelperFilterStreamGenerator.stream(), true, false)
             .generateRegistry(Operation.class, ResourceKey.sponge("block_operation"), BlockOperationStreamGenerator.stream(), true, false)
             .generateRegistry(TransactionType.class, ResourceKey.sponge("transaction_type"), BlockTransactionTypeStreamGenerator.stream(), true, false)
+            .generateRegistry(HeightType.class, ResourceKey.sponge("height_type"), HeightTypeStreamGenerator.stream(), true, false)
         ;
 
         this
@@ -686,6 +691,7 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
             .registerRegistry(ProfessionType.class, ResourceKey.minecraft("profession_type"), (Registry<ProfessionType>) (Object) Registry.VILLAGER_PROFESSION)
             .registerRegistry(VillagerType.class, ResourceKey.minecraft("villager_type"), (Registry<VillagerType>) (Object) Registry.VILLAGER_TYPE)
             .registerRegistry(RecipeType.class, ResourceKey.minecraft("recipe_type"), (Registry<RecipeType>) (Object) Registry.RECIPE_TYPE)
+            .registerRegistry(ChunkState.class, ResourceKey.minecraft("chunk_status"), (Registry<ChunkState>) (Object) Registry.CHUNK_STATUS)
         ;
 
         // Que the "I'm Vanilla and I'm fucking stupid" music
@@ -722,6 +728,7 @@ public final class SpongeCatalogRegistry implements CatalogRegistry {
         VillagerProfessionSupplier.registerSuppliers(this);
         VillagerTypeSupplier.registerSuppliers(this);
         RecipeTypeSupplier.registerSuppliers(this);
+        ChunkStateSupplier.registerSuppliers(this);
     }
 
     public <T extends CatalogType, E> SpongeCatalogRegistry generateRegistry(final Class<T> catalogClass, final ResourceKey key, final Stream<E> valueStream, final boolean generateSuppliers, final boolean isDynamic) {

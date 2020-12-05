@@ -234,6 +234,7 @@
         "mcp.potion.EffectMixin_API",
         "mcp.potion.PotionMixin_API",
         "mcp.scoreboard.ScoreCriteria_RenderTypeMixin_API",
+        "mcp.scoreboard.ScoreCriteriaMixin_API",
         "mcp.scoreboard.ScorePlayerTeamMixin_API",
         "mcp.scoreboard.ServerScoreboardMixin_API",
         "mcp.scoreboard.Team_CollisionRuleMixin_API",
@@ -328,6 +329,10 @@
         "mcp.world.biome.BiomeMixin_API",
         "mcp.world.border.WorldBorderMixin_API",
         "mcp.world.chunk.ChunkMixin_API",
+        "mcp.world.chunk.ChunkStatus_API",
+        "mcp.world.chunk.EmptyChunkMixin_API",
+        "mcp.world.chunk.IChunkMixin_API",
+        "mcp.world.gen.Heightmap_TypeMixin_API",
         "mcp.world.raid.Raid_StatusMixin_API",
         "mcp.world.raid.RaidMixin_API",
         "mcp.world.server.ServerWorldMixin_API",
@@ -335,7 +340,7 @@
         "mojang.authlib.properties.PropertyMixin_API",
         "service.permission.SubjectMixin_API",
         "world.LocatableBlockMixin",
-        "mcp.scoreboard.ScoreCriteriaMixin_API"
+        "mcp.world.chunk.ChunkPrimer_API"
     ],
     "client": [
         "mcp.client.MinecraftMixin_API",
