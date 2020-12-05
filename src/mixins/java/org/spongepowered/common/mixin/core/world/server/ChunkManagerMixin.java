@@ -24,19 +24,23 @@
  */
 package org.spongepowered.common.mixin.core.world.server;
 
+import com.mojang.datafixers.util.Either;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.storage.ChunkSerializer;
+import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.api.world.SerializationBehavior;
+import org.spongepowered.api.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.common.bridge.world.chunk.ChunkPrimerBridge;
 import org.spongepowered.common.bridge.world.storage.WorldInfoBridge;
 
 import java.io.IOException;
@@ -53,7 +57,7 @@ public abstract class ChunkManagerMixin {
     // @formatter:on
 
     @Redirect(method = "chunkSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/village/PointOfInterestManager;saveIfDirty(Lnet/minecraft/util/math/ChunkPos;)V"))
-    private void impl$useSerializationBehaviorForPOI(PointOfInterestManager pointOfInterestManager, ChunkPos p_219112_1_) {
+    private void impl$useSerializationBehaviorForPOI(final PointOfInterestManager pointOfInterestManager, final ChunkPos p_219112_1_) {
         final WorldInfoBridge infoBridge = (WorldInfoBridge) this.world.getWorldInfo();
         final SerializationBehavior serializationBehavior = infoBridge.bridge$getSerializationBehavior();
         if (serializationBehavior == SerializationBehavior.AUTOMATIC || serializationBehavior == SerializationBehavior.MANUAL) {
@@ -62,7 +66,7 @@ public abstract class ChunkManagerMixin {
     }
 
     @Redirect(method = "chunkSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;loadChunkData(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/CompoundNBT;"))
-    private CompoundNBT impl$useSerializationBehaviorForChunkSave(ChunkManager chunkManager, ChunkPos pos) throws IOException {
+    private CompoundNBT impl$useSerializationBehaviorForChunkSave(final ChunkManager chunkManager, final ChunkPos pos) throws IOException {
         final WorldInfoBridge infoBridge = (WorldInfoBridge) this.world.getWorldInfo();
         final SerializationBehavior serializationBehavior = infoBridge.bridge$getSerializationBehavior();
         if (serializationBehavior == SerializationBehavior.AUTOMATIC || serializationBehavior == SerializationBehavior.MANUAL) {
@@ -75,7 +79,7 @@ public abstract class ChunkManagerMixin {
     }
 
     @Redirect(method = "chunkSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/storage/ChunkSerializer;write(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/chunk/IChunk;)Lnet/minecraft/nbt/CompoundNBT;"))
-    private CompoundNBT impl$useSerializationBehaviorForChunkSave(ServerWorld worldIn, IChunk chunkIn) {
+    private CompoundNBT impl$useSerializationBehaviorForChunkSave(final ServerWorld worldIn, final IChunk chunkIn) {
         final WorldInfoBridge infoBridge = (WorldInfoBridge) worldIn.getWorldInfo();
         final SerializationBehavior serializationBehavior = infoBridge.bridge$getSerializationBehavior();
         if (serializationBehavior == SerializationBehavior.AUTOMATIC || serializationBehavior == SerializationBehavior.MANUAL) {
@@ -86,11 +90,18 @@ public abstract class ChunkManagerMixin {
     }
 
     @Redirect(method = "chunkSave", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;writeChunk(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundNBT;)V"))
-    private void impl$doNotWriteIfWeHaveNoData(ChunkManager chunkManager, ChunkPos pos, CompoundNBT compound) {
+    private void impl$doNotWriteIfWeHaveNoData(final ChunkManager chunkManager, final ChunkPos pos, final CompoundNBT compound) {
         if (compound == null) {
             return;
         }
 
         chunkManager.writeChunk(pos, compound);
     }
+
+    @Redirect(method = "chunkLoad", at = @At(value = "INVOKE", target = "Lcom/mojang/datafixers/util/Either;left(Ljava/lang/Object;)Lcom/mojang/datafixers/util/Either;"))
+    private Either<IChunk, ChunkHolder.IChunkLoadingError> impl$addWorldToChunkPrimer(final Object value) {
+        ((ChunkPrimerBridge) value).bridge$setAssociatedWorld((World<?>) this.world);
+        return Either.left((IChunk) value);
+    }
+
 }

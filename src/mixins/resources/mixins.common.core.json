@@ -154,7 +154,10 @@
         "world.server.ServerWorldMixin",
         "world.spawner.AbstractSpawnerMixin",
         "world.storage.SaveHandlerMixin",
-        "world.storage.WorldInfoMixin"
+        "world.storage.WorldInfoMixin",
+        "world.chunk.ChunkPrimerMixin",
+        "world.chunk.ChunkPrimerWrapperMixin",
+        "world.chunk.storage.ChunkSerializerMixin"
     ],
     "client": [
         "client.MinecraftMixin",

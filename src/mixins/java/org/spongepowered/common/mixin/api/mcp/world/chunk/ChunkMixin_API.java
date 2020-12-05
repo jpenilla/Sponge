@@ -54,7 +54,7 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 @Mixin(net.minecraft.world.chunk.Chunk.class)
-public abstract class ChunkMixin_API implements Chunk, IChunkMixin_API<Chunk> {
+public abstract class ChunkMixin_API implements Chunk {
 
     @Shadow @Final private net.minecraft.world.World world;
     @Shadow @Final private ChunkPos pos;
