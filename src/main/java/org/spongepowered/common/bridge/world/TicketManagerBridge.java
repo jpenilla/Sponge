@@ -22,26 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.world.server;
+package org.spongepowered.common.bridge.world;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.TicketManager;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.api.util.Ticks;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.server.Ticket;
+import org.spongepowered.common.world.server.SpongeTicketType;
+import org.spongepowered.math.vector.Vector3i;
 
-@Mixin(ChunkManager.class)
-public interface ChunkManagerAccessor {
+import java.util.Collection;
+import java.util.Optional;
 
-    @Accessor("generator") void accessor$generator(final ChunkGenerator generator);
+public interface TicketManagerBridge {
 
-    @Accessor("entityMap") Int2ObjectMap<EntityTrackerAccessor> accessor$entityMap();
+    boolean bridge$checkTicketValid(Ticket<?> ticket);
 
-    @Invoker("saveAllChunks") void invoker$saveAllChunks(final boolean flush);
+    Ticks bridge$getTimeLeft(Ticket<?> ticket);
 
-    @Invoker("getChunks") Iterable<ChunkHolder> invoker$getChunks();
+    <S, T> Optional<Ticket<T>> bridge$registerTicket(ServerWorld world, SpongeTicketType<S, T> ticketType, Vector3i pos, T value, int distanceLimit);
+
+    boolean bridge$renewTicket(Ticket<?> ticket);
+
+    boolean bridge$releaseTicket(Ticket<?> ticket);
+
+    <S, T> Collection<Ticket<T>> bridge$getTickets(SpongeTicketType<S, T> ticketType);
 
 }

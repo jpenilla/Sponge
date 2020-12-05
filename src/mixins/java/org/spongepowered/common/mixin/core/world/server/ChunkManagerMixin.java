@@ -37,17 +37,27 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.common.accessor.world.server.ServerChunkProviderAccessor;
+import org.spongepowered.common.bridge.world.TicketManagerBridge;
+import org.spongepowered.common.bridge.world.server.ChunkManagerBridge;
 import org.spongepowered.common.bridge.world.storage.ServerWorldInfoBridge;
 
 @Mixin(ChunkManager.class)
-public abstract class ChunkManagerMixin {
+public abstract class ChunkManagerMixin implements ChunkManagerBridge {
 
     // @formatter:off
     @Shadow @Final private ServerWorld level;
     // @formatter:on
 
+    @Override
+    public TicketManagerBridge bridge$getTicketManager() {
+        // The ticket manager on this object is a package-private class and isn't accessible from here
+        // - @Shadow doesn't work because it seems to need the exact type.
+        return (TicketManagerBridge) ((ServerChunkProviderAccessor) this.level.getChunkSource()).accessor$distanceManager();
+    }
+
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/village/PointOfInterestManager;flush(Lnet/minecraft/util/math/ChunkPos;)V"))
-    private void impl$useSerializationBehaviorForPOI(PointOfInterestManager pointOfInterestManager, ChunkPos p_219112_1_) {
+    private void impl$useSerializationBehaviorForPOI(final PointOfInterestManager pointOfInterestManager, final ChunkPos p_219112_1_) {
         final ServerWorldInfoBridge infoBridge = (ServerWorldInfoBridge) this.level.getLevelData();
         final SerializationBehavior serializationBehavior = infoBridge.bridge$serializationBehavior();
         if (serializationBehavior == SerializationBehavior.AUTOMATIC || serializationBehavior == SerializationBehavior.MANUAL) {
@@ -56,7 +66,7 @@ public abstract class ChunkManagerMixin {
     }
 
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/storage/ChunkSerializer;write(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/chunk/IChunk;)Lnet/minecraft/nbt/CompoundNBT;"))
-    private CompoundNBT impl$useSerializationBehaviorForChunkSave(ServerWorld worldIn, IChunk chunkIn) {
+    private CompoundNBT impl$useSerializationBehaviorForChunkSave(final ServerWorld worldIn, final IChunk chunkIn) {
         final ServerWorldInfoBridge infoBridge = (ServerWorldInfoBridge) this.level.getLevelData();
         final SerializationBehavior serializationBehavior = infoBridge.bridge$serializationBehavior();
         if (serializationBehavior == SerializationBehavior.AUTOMATIC || serializationBehavior == SerializationBehavior.MANUAL) {
@@ -67,7 +77,7 @@ public abstract class ChunkManagerMixin {
     }
 
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;write(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundNBT;)V"))
-    private void impl$doNotWriteIfWeHaveNoData(ChunkManager chunkManager, ChunkPos pos, CompoundNBT compound) {
+    private void impl$doNotWriteIfWeHaveNoData(final ChunkManager chunkManager, final ChunkPos pos, final CompoundNBT compound) {
         if (compound == null) {
             return;
         }

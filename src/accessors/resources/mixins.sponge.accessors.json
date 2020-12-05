@@ -177,6 +177,7 @@
         "world.server.EntityTrackerAccessor",
         "world.server.ServerChunkProviderAccessor",
         "world.server.ServerWorldAccessor",
+        "world.server.TicketAccessor",
         "world.spawner.AbstractSpawnerAccessor",
         "world.storage.PlayerDataAccessor",
         "entity.item.BoatEntityAccessor",

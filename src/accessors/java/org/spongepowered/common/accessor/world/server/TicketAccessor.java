@@ -24,24 +24,26 @@
  */
 package org.spongepowered.common.accessor.world.server;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.TicketManager;
+import net.minecraft.world.server.Ticket;
+import net.minecraft.world.server.TicketType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ChunkManager.class)
-public interface ChunkManagerAccessor {
+@Mixin(Ticket.class)
+public interface TicketAccessor<T> {
 
-    @Accessor("generator") void accessor$generator(final ChunkGenerator generator);
+    @Invoker("<init>")
+    static <T> Ticket<T> accessor$createInstance(final TicketType<T> p_i226095_1_, final int p_i226095_2_, final T p_i226095_3_) {
+        throw new AssertionError("This shouldn't be callable");
+    }
 
-    @Accessor("entityMap") Int2ObjectMap<EntityTrackerAccessor> accessor$entityMap();
+    @Accessor("timestamp") long accessor$getTimestamp();
 
-    @Invoker("saveAllChunks") void invoker$saveAllChunks(final boolean flush);
+    @Accessor("value") T accessor$getValue();
 
-    @Invoker("getChunks") Iterable<ChunkHolder> invoker$getChunks();
+    @Invoker("isExpired") boolean accessor$isExpired(long currentTimestamp);
+
+    @Invoker("setTimestamp") void accessor$setTimestamp(long timestamp);
 
 }

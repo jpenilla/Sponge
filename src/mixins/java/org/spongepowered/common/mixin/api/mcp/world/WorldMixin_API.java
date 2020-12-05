@@ -127,6 +127,7 @@ public abstract class WorldMixin_API<W extends World<W, L>, L extends Location<W
 
     @Shadow public abstract DimensionType dimensionType();
 
+    @Shadow @Final protected AbstractChunkProvider chunkProvider;
     private Context impl$context;
 
     // World

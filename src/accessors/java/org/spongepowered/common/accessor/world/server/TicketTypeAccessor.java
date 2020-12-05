@@ -24,24 +24,14 @@
  */
 package org.spongepowered.common.accessor.world.server;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.TicketManager;
+import net.minecraft.world.server.TicketType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(ChunkManager.class)
-public interface ChunkManagerAccessor {
+@Mixin(TicketType.class)
+public interface TicketTypeAccessor {
 
-    @Accessor("generator") void accessor$generator(final ChunkGenerator generator);
-
-    @Accessor("entityMap") Int2ObjectMap<EntityTrackerAccessor> accessor$entityMap();
-
-    @Invoker("saveAllChunks") void invoker$saveAllChunks(final boolean flush);
-
-    @Invoker("getChunks") Iterable<ChunkHolder> invoker$getChunks();
+    @Accessor("name")
+    String accessor$getName();
 
 }

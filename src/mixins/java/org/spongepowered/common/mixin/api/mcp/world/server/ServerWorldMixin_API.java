@@ -65,6 +65,7 @@ import org.spongepowered.api.world.generation.ChunkGenerator;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.WorldTemplate;
 import org.spongepowered.api.world.server.storage.ServerWorldProperties;
+import org.spongepowered.api.world.server.ChunkManager;
 import org.spongepowered.api.world.storage.WorldStorage;
 import org.spongepowered.api.world.weather.Weather;
 import org.spongepowered.api.world.weather.Weathers;
@@ -76,7 +77,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.accessor.world.raid.RaidManagerAccessor;
 import org.spongepowered.common.block.SpongeBlockSnapshotBuilder;
-import org.spongepowered.common.bridge.world.DimensionBridge;
 import org.spongepowered.common.bridge.world.ServerWorldBridge;
 import org.spongepowered.common.bridge.world.chunk.ChunkBridge;
 import org.spongepowered.common.data.SpongeDataManager;
@@ -375,4 +375,10 @@ public abstract class ServerWorldMixin_API extends WorldMixin_API<org.spongepowe
     public RegistryHolder registries() {
         return ((ServerWorldBridge) this).bridge$registries();
     }
+
+    @Override
+    public ChunkManager getChunkManager() {
+        return (ChunkManager) this.shadow$getChunkSource().chunkMap;
+    }
+
 }

@@ -22,26 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.world.server;
+package org.spongepowered.common.mixin.core.world.server;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.TicketManager;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.common.bridge.world.server.TicketBridge;
 
-@Mixin(ChunkManager.class)
-public interface ChunkManagerAccessor {
+public class TicketMixin implements TicketBridge {
 
-    @Accessor("generator") void accessor$generator(final ChunkGenerator generator);
+    private long impl$chunkPosition;
 
-    @Accessor("entityMap") Int2ObjectMap<EntityTrackerAccessor> accessor$entityMap();
+    @Override
+    public long bridge$getChunkPosition() {
+        return this.impl$chunkPosition;
+    }
 
-    @Invoker("saveAllChunks") void invoker$saveAllChunks(final boolean flush);
-
-    @Invoker("getChunks") Iterable<ChunkHolder> invoker$getChunks();
+    @Override
+    public void bridge$setChunkPosition(final long chunkPos) {
+        this.impl$chunkPosition = chunkPos;
+    }
 
 }
