@@ -205,7 +205,8 @@
     "world.gen.DimensionSettingsMixin",
     "world.DimensionTypeMixin",
     "command.arguments.DimensionArgumentMixin",
-      "world.server.TicketManagerMixin"
+      "world.server.TicketManagerMixin",
+    "world.server.TicketTypeMixin"
   ],
   "client": [
     "client.MinecraftMixin",

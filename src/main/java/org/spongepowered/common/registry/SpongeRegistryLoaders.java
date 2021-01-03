@@ -832,12 +832,9 @@ public final class SpongeRegistryLoaders {
 
     public static RegistryLoader<TicketType<?>> ticketType() {
         return RegistryLoader.of(l -> {
-            l.add(TicketTypes.FORCED, k -> SpongeTicketType.createForChunkPos(net.minecraft.world.server.TicketType.FORCED));
-            l.add(TicketTypes.PORTAL, k -> SpongeTicketType.createForBlockPos(net.minecraft.world.server.TicketType.PORTAL));
-            l.add(TicketTypes.POST_TELEPORT,
-                    k -> new SpongeTicketType<Integer, Entity>(net.minecraft.world.server.TicketType.POST_TELEPORT,
-                            (entity, serverWorld) -> ((net.minecraft.entity.Entity) entity).getId(),
-                            (id, serverWorld) -> (Entity) ((ServerWorld) serverWorld).getEntity(id)));
+            l.add(TicketTypes.FORCED, k -> (TicketType<?>) net.minecraft.world.server.TicketType.FORCED);
+            l.add(TicketTypes.PORTAL, k -> (TicketType<?>) net.minecraft.world.server.TicketType.PORTAL);
+            l.add(TicketTypes.POST_TELEPORT, k -> (TicketType<?>) net.minecraft.world.server.TicketType.POST_TELEPORT);
         });
     }
 

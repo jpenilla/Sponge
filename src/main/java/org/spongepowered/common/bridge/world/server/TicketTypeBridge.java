@@ -22,28 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.world.server;
+package org.spongepowered.common.bridge.world.server;
 
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketType;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import java.util.function.Function;
 
-@Mixin(Ticket.class)
-public interface TicketAccessor<T> {
+public interface TicketTypeBridge<N, T> {
 
-    @Invoker("<init>")
-    static <T> Ticket<T> accessor$createInstance(final TicketType<T> p_i226095_1_, final int p_i226095_2_, final T p_i226095_3_) {
-        throw new AssertionError("This shouldn't be callable");
-    }
+    void bridge$setTypeConverter(Function<T, N> converter);
 
-    @Accessor("createdTick") long accessor$createdTick();
-
-    @Accessor("key") T accessor$key();
-
-    @Invoker("timedOut") boolean invoker$timedOut(long currentTimestamp);
-
-    @Invoker("setCreatedTick") void invoker$setCreatedTick(long timestamp);
+    N bridge$convertToNativeType(T spongeType);
 
 }

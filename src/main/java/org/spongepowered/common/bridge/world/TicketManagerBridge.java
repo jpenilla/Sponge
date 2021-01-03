@@ -27,7 +27,7 @@ package org.spongepowered.common.bridge.world;
 import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.server.Ticket;
-import org.spongepowered.common.world.server.SpongeTicketType;
+import org.spongepowered.api.world.server.TicketType;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Collection;
@@ -39,12 +39,12 @@ public interface TicketManagerBridge {
 
     Ticks bridge$getTimeLeft(Ticket<?> ticket);
 
-    <S, T> Optional<Ticket<T>> bridge$registerTicket(ServerWorld world, SpongeTicketType<S, T> ticketType, Vector3i pos, T value, int distanceLimit);
+    <S, T> Optional<Ticket<T>> bridge$registerTicket(ServerWorld world, TicketType<T> ticketType, Vector3i pos, T value, int distanceLimit);
 
     boolean bridge$renewTicket(Ticket<?> ticket);
 
     boolean bridge$releaseTicket(Ticket<?> ticket);
 
-    <S, T> Collection<Ticket<T>> bridge$getTickets(SpongeTicketType<S, T> ticketType);
+    <T> Collection<Ticket<T>> bridge$getTickets(TicketType<T> ticketType);
 
 }

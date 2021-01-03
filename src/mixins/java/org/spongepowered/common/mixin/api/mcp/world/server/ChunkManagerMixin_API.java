@@ -33,7 +33,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.common.bridge.world.server.ChunkManagerBridge;
-import org.spongepowered.common.world.server.SpongeTicketType;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Collection;
@@ -42,11 +41,11 @@ import java.util.Optional;
 @Mixin(ChunkManager.class)
 public abstract class ChunkManagerMixin_API implements org.spongepowered.api.world.server.ChunkManager {
 
-    @Shadow @Final private net.minecraft.world.server.ServerWorld world;
+    @Shadow @Final private net.minecraft.world.server.ServerWorld level;
 
     @Override
     public ServerWorld getWorld() {
-        return (ServerWorld) this.world;
+        return (ServerWorld) this.level;
     }
 
     @Override
@@ -65,7 +64,7 @@ public abstract class ChunkManagerMixin_API implements org.spongepowered.api.wor
             throw new IllegalArgumentException("The radius must be positive.");
         }
         return ((ChunkManagerBridge) this).bridge$getTicketManager()
-                .bridge$registerTicket(this.getWorld(), (SpongeTicketType<?, T>) type, chunkPosition, value, radius);
+                .bridge$registerTicket(this.getWorld(), type, chunkPosition, value, radius);
     }
 
     @Override
@@ -80,7 +79,7 @@ public abstract class ChunkManagerMixin_API implements org.spongepowered.api.wor
 
     @Override
     public <T> Collection<Ticket<T>> getTickets(final TicketType<T> type) {
-        return ((ChunkManagerBridge) this).bridge$getTicketManager().bridge$getTickets((SpongeTicketType<?, T>) type);
+        return ((ChunkManagerBridge) this).bridge$getTicketManager().bridge$getTickets(type);
     }
 
 }

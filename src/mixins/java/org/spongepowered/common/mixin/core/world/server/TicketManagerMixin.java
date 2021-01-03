@@ -41,10 +41,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.accessor.world.server.TicketAccessor;
 import org.spongepowered.common.bridge.world.TicketManagerBridge;
 import org.spongepowered.common.bridge.world.server.TicketBridge;
+import org.spongepowered.common.bridge.world.server.TicketTypeBridge;
 import org.spongepowered.common.util.Constants;
 import org.spongepowered.common.util.SpongeTicks;
 import org.spongepowered.common.util.VecHelper;
-import org.spongepowered.common.world.server.SpongeTicketType;
 import org.spongepowered.math.vector.Vector3i;
 
 import java.util.Collection;
@@ -68,10 +68,10 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
         final net.minecraft.world.server.Ticket<?> nativeTicket = ((net.minecraft.world.server.Ticket<?>) (Object) ticket);
         if (nativeTicket.getType() == TicketType.FORCED) {
             final TicketAccessor<ChunkPos> ticketAccessor = ((TicketAccessor<ChunkPos>) ticket);
-            final ChunkPos chunkPos = ticketAccessor.accessor$getValue();
+            final ChunkPos chunkPos = ticketAccessor.accessor$key();
             if (this.tickets.computeIfAbsent(chunkPos.toLong(), x -> SortedArraySet.create(4)).contains(nativeTicket)) {
                 // check to see if it's expired.
-                return ticketAccessor.accessor$isExpired(this.ticketTickCounter);
+                return ticketAccessor.invoker$timedOut(this.ticketTickCounter);
             }
         }
         return false;
@@ -81,7 +81,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @SuppressWarnings("unchecked")
     public Ticks bridge$getTimeLeft(final Ticket<?> ticket) {
         if (this.bridge$checkTicketValid(ticket)) {
-            return new SpongeTicks(((TicketAccessor<ChunkPos>) ticket).accessor$getTimestamp() - this.ticketTickCounter);
+            return new SpongeTicks(((TicketAccessor<ChunkPos>) ticket).accessor$createdTick() - this.ticketTickCounter);
         }
         return Ticks.zero();
     }
@@ -91,7 +91,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     public boolean bridge$renewTicket(final Ticket<?> ticket) {
         if (this.bridge$checkTicketValid(ticket)) {
             final net.minecraft.world.server.Ticket<?> nativeTicket = (net.minecraft.world.server.Ticket<?>) (Object) ticket;
-            ((TicketAccessor<ChunkPos>) ticket).accessor$setTimestamp(this.ticketTickCounter + nativeTicket.getType().timeout());
+            ((TicketAccessor<ChunkPos>) ticket).invoker$setCreatedTick(this.ticketTickCounter + nativeTicket.getType().timeout());
             return true;
         }
         return false;
@@ -100,13 +100,13 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @Override
     @SuppressWarnings("unchecked")
     public <S, T> Optional<Ticket<T>> bridge$registerTicket(
-            final ServerWorld world, final SpongeTicketType<S, T> ticketType, final Vector3i pos, final T value, final int distanceLimit) {
-        final TicketType<S> type = ticketType.getWrappedType();
+            final ServerWorld world, final org.spongepowered.api.world.server.TicketType<T> ticketType, final Vector3i pos, final T value, final int distanceLimit) {
+        final TicketType<S> type = (net.minecraft.world.server.TicketType<S>) ticketType;
         final net.minecraft.world.server.Ticket<?> ticketToRequest =
                 TicketAccessor.accessor$createInstance(
                         type,
                         Constants.ChunkTicket.MAXIMUM_CHUNK_TICKET_LEVEL - distanceLimit,
-                        ticketType.getNativeType(value, world));
+                        ((TicketTypeBridge<S, T>) ticketType).bridge$convertToNativeType(value));
         this.shadow$addTicket(VecHelper.toChunkPos(pos).toLong(), ticketToRequest);
         return Optional.of((Ticket<T>) (Object) ticketToRequest);
     }
@@ -122,11 +122,11 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
         return false;
     }
 
-    @SuppressWarnings({ "ConstantConditions", "unchecked" })
+    @SuppressWarnings({"ConstantConditions", "unchecked", "EqualsBetweenInconvertibleTypes"})
     @Override
-    public <S, T> Collection<Ticket<T>> bridge$getTickets(final SpongeTicketType<S, T> ticketType) {
+    public <T> Collection<Ticket<T>> bridge$getTickets(final org.spongepowered.api.world.server.TicketType<T> ticketType) {
         return this.tickets.values().stream()
-                .flatMap(x -> x.stream().filter(ticket -> ticket.getType().equals(ticketType.getWrappedType())))
+                .flatMap(x -> x.stream().filter(ticket -> ticket.getType().equals(ticketType)))
                 .map(x -> (Ticket<T>) (Object) x)
                 .collect(Collectors.toList());
     }

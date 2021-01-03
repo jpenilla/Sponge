@@ -22,28 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.accessor.world.server;
+package org.spongepowered.common.mixin.api.mcp.world.server;
 
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketType;
+import org.spongepowered.api.util.Ticks;
+import org.spongepowered.api.world.server.TicketType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-import org.spongepowered.asm.mixin.gen.Invoker;
+import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(Ticket.class)
-public interface TicketAccessor<T> {
+@Mixin(net.minecraft.world.server.TicketType.class)
+public abstract class TicketTypeMixin_API<T> implements TicketType<T> {
 
-    @Invoker("<init>")
-    static <T> Ticket<T> accessor$createInstance(final TicketType<T> p_i226095_1_, final int p_i226095_2_, final T p_i226095_3_) {
-        throw new AssertionError("This shouldn't be callable");
+    // @formatter:off
+    @Shadow @Final private long timeout;
+    // @formatter:on
+
+    @Override
+    public Ticks getLifetime() {
+        return Ticks.of(this.timeout);
     }
-
-    @Accessor("createdTick") long accessor$createdTick();
-
-    @Accessor("key") T accessor$key();
-
-    @Invoker("timedOut") boolean invoker$timedOut(long currentTimestamp);
-
-    @Invoker("setCreatedTick") void invoker$setCreatedTick(long timestamp);
 
 }
