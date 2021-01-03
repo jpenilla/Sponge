@@ -54,12 +54,12 @@ import java.util.stream.Collectors;
 @Mixin(TicketManager.class)
 public abstract class TicketManagerMixin implements TicketManagerBridge {
 
-    @Shadow private void shadow$register(final long chunkpos, final net.minecraft.world.server.Ticket<?> ticket) { }
-    @Shadow protected abstract void shadow$release(long chunkPosIn, net.minecraft.world.server.Ticket<?> ticketIn);
+    // @formatter:off
+    @Shadow private void shadow$addTicket(final long chunkpos, final net.minecraft.world.server.Ticket<?> ticket) { }
+    @Shadow protected abstract void shadow$removeTicket(long chunkPosIn, net.minecraft.world.server.Ticket<?> ticketIn);
     @Shadow @Final private Long2ObjectOpenHashMap<SortedArraySet<net.minecraft.world.server.Ticket<?>>> tickets;
-    @Shadow private long currentTime;
-
-    @Shadow protected abstract void tick();
+    @Shadow private long ticketTickCounter;
+    // @formatter:on
 
     @Override
     @SuppressWarnings({ "ConstantConditions", "unchecked" })
@@ -69,9 +69,9 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
         if (nativeTicket.getType() == TicketType.FORCED) {
             final TicketAccessor<ChunkPos> ticketAccessor = ((TicketAccessor<ChunkPos>) ticket);
             final ChunkPos chunkPos = ticketAccessor.accessor$getValue();
-            if (this.tickets.computeIfAbsent(chunkPos.asLong(), x -> SortedArraySet.newSet(4)).contains(nativeTicket)) {
+            if (this.tickets.computeIfAbsent(chunkPos.toLong(), x -> SortedArraySet.create(4)).contains(nativeTicket)) {
                 // check to see if it's expired.
-                return ticketAccessor.accessor$isExpired(this.currentTime);
+                return ticketAccessor.accessor$isExpired(this.ticketTickCounter);
             }
         }
         return false;
@@ -81,7 +81,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @SuppressWarnings("unchecked")
     public Ticks bridge$getTimeLeft(final Ticket<?> ticket) {
         if (this.bridge$checkTicketValid(ticket)) {
-            return new SpongeTicks(((TicketAccessor<ChunkPos>) ticket).accessor$getTimestamp() - this.currentTime);
+            return new SpongeTicks(((TicketAccessor<ChunkPos>) ticket).accessor$getTimestamp() - this.ticketTickCounter);
         }
         return Ticks.zero();
     }
@@ -91,7 +91,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     public boolean bridge$renewTicket(final Ticket<?> ticket) {
         if (this.bridge$checkTicketValid(ticket)) {
             final net.minecraft.world.server.Ticket<?> nativeTicket = (net.minecraft.world.server.Ticket<?>) (Object) ticket;
-            ((TicketAccessor<ChunkPos>) ticket).accessor$setTimestamp(this.currentTime + nativeTicket.getType().getLifespan());
+            ((TicketAccessor<ChunkPos>) ticket).accessor$setTimestamp(this.ticketTickCounter + nativeTicket.getType().timeout());
             return true;
         }
         return false;
@@ -107,7 +107,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
                         type,
                         Constants.ChunkTicket.MAXIMUM_CHUNK_TICKET_LEVEL - distanceLimit,
                         ticketType.getNativeType(value, world));
-        this.shadow$register(VecHelper.toChunkPos(pos).asLong(), ticketToRequest);
+        this.shadow$addTicket(VecHelper.toChunkPos(pos).toLong(), ticketToRequest);
         return Optional.of((Ticket<T>) (Object) ticketToRequest);
     }
 
@@ -115,7 +115,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     @SuppressWarnings({"ConstantConditions"})
     public boolean bridge$releaseTicket(final Ticket<?> ticket) {
         if (this.bridge$checkTicketValid(ticket)) {
-            this.shadow$release(((TicketBridge) ticket).bridge$getChunkPosition(),
+            this.shadow$removeTicket(((TicketBridge) ticket).bridge$getChunkPosition(),
                     (net.minecraft.world.server.Ticket<?>) (Object) ticket);
             return true;
         }
@@ -132,7 +132,7 @@ public abstract class TicketManagerMixin implements TicketManagerBridge {
     }
 
     @SuppressWarnings("ConstantConditions")
-    @Inject(method = "register(JLnet/minecraft/world/server/Ticket;)V", at = @At("HEAD"))
+    @Inject(method = "addTicket(JLnet/minecraft/world/server/Ticket;)V", at = @At("HEAD"))
     private void impl$addChunkPosToTicket(final long chunkPos, final net.minecraft.world.server.Ticket<?> ticket, final CallbackInfo ci) {
         ((TicketBridge) (Object) ticket).bridge$setChunkPosition(chunkPos);
     }

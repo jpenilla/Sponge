@@ -128,16 +128,16 @@ public final class VecHelper {
 
     // === MC ChunkPos ---> Flow Vector3i ===
 
-    public static Vector3i toVector3i(final ChunkPos pos) {
+    public static org.spongepowered.math.vector.Vector3i toVector3i(final ChunkPos pos) {
         if (pos == null) {
             return null;
         }
-        return new Vector3i(pos.x, 0, pos.z);
+        return new org.spongepowered.math.vector.Vector3i(pos.x, 0, pos.z);
     }
 
     // === Flow Vector3i --> MC ChunkPos ===
 
-    public static ChunkPos toChunkPos(final Vector3i vector) {
+    public static ChunkPos toChunkPos(final org.spongepowered.math.vector.Vector3i vector) {
         if (vector == null) {
             return null;
         }

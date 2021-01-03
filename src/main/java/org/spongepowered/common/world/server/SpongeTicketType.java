@@ -43,11 +43,10 @@ public final class SpongeTicketType<S, T> implements TicketType<T> {
     private final net.minecraft.world.server.TicketType<S> wrappedType;
     private final BiFunction<T, ServerWorld, S> spongeToNative;
     private final BiFunction<S, ServerWorld, T> nativeToSponge;
-    private final ResourceKey key;
     private final Ticks lifetime;
 
     public static SpongeTicketType<ChunkPos, Vector3i> createForChunkPos(final net.minecraft.world.server.TicketType<ChunkPos> ticketType) {
-        return new SpongeTicketType<>(ticketType, (in, world) -> VecHelper.toChunkPos(in), (in, world) -> VecHelper.toVec3i(in));
+        return new SpongeTicketType<>(ticketType, (in, world) -> VecHelper.toChunkPos(in), (in, world) -> VecHelper.toVector3i(in));
     }
 
     public static SpongeTicketType<BlockPos, Vector3i> createForBlockPos(final net.minecraft.world.server.TicketType<BlockPos> ticketType) {
@@ -64,13 +63,7 @@ public final class SpongeTicketType<S, T> implements TicketType<T> {
         this.wrappedType = wrappedType;
         this.spongeToNative = spongeToNative;
         this.nativeToSponge = nativeToSponge;
-        this.key = ResourceKey.sponge(((TicketTypeAccessor) wrappedType).accessor$getName().toLowerCase(Locale.ROOT));
-        this.lifetime = new SpongeTicks(this.wrappedType.getLifespan());
-    }
-
-    @Override
-    public ResourceKey getKey() {
-        return this.key;
+        this.lifetime = new SpongeTicks(this.wrappedType.timeout());
     }
 
     public net.minecraft.world.server.TicketType<S> getWrappedType() {

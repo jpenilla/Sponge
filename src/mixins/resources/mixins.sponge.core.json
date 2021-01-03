@@ -204,7 +204,8 @@
     "util.registry.DynamicRegistriesMixin",
     "world.gen.DimensionSettingsMixin",
     "world.DimensionTypeMixin",
-    "command.arguments.DimensionArgumentMixin"
+    "command.arguments.DimensionArgumentMixin",
+      "world.server.TicketManagerMixin"
   ],
   "client": [
     "client.MinecraftMixin",

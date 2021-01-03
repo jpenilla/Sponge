@@ -49,6 +49,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.MusicDiscItem;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.server.ServerWorld;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -142,6 +143,8 @@ import org.spongepowered.api.world.portal.PortalType;
 import org.spongepowered.api.world.portal.PortalTypes;
 import org.spongepowered.api.world.schematic.PaletteType;
 import org.spongepowered.api.world.schematic.PaletteTypes;
+import org.spongepowered.api.world.server.TicketType;
+import org.spongepowered.api.world.server.TicketTypes;
 import org.spongepowered.api.world.teleport.TeleportHelperFilter;
 import org.spongepowered.api.world.teleport.TeleportHelperFilters;
 import org.spongepowered.api.world.weather.Weather;
@@ -234,6 +237,7 @@ import org.spongepowered.common.util.VecHelper;
 import org.spongepowered.common.world.portal.EndPortalType;
 import org.spongepowered.common.world.portal.NetherPortalType;
 import org.spongepowered.common.world.schematic.SpongePaletteType;
+import org.spongepowered.common.world.server.SpongeTicketType;
 import org.spongepowered.common.world.teleport.ConfigTeleportHelperFilter;
 import org.spongepowered.common.world.teleport.DefaultTeleportHelperFilter;
 import org.spongepowered.common.world.teleport.FlyingTeleportHelperFilter;
@@ -242,6 +246,7 @@ import org.spongepowered.common.world.teleport.SurfaceOnlyTeleportHelperFilter;
 import org.spongepowered.common.world.weather.SpongeWeather;
 import org.spongepowered.math.vector.Vector2d;
 import org.spongepowered.math.vector.Vector3d;
+import org.spongepowered.math.vector.Vector3i;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -822,6 +827,17 @@ public final class SpongeRegistryLoaders {
             l.add(TeleportHelperFilters.FLYING, k -> new FlyingTeleportHelperFilter());
             l.add(TeleportHelperFilters.NO_PORTAL, k -> new NoPortalTeleportHelperFilter());
             l.add(TeleportHelperFilters.SURFACE_ONLY, k -> new SurfaceOnlyTeleportHelperFilter());
+        });
+    }
+
+    public static RegistryLoader<TicketType<?>> ticketType() {
+        return RegistryLoader.of(l -> {
+            l.add(TicketTypes.FORCED, k -> SpongeTicketType.createForChunkPos(net.minecraft.world.server.TicketType.FORCED));
+            l.add(TicketTypes.PORTAL, k -> SpongeTicketType.createForBlockPos(net.minecraft.world.server.TicketType.PORTAL));
+            l.add(TicketTypes.POST_TELEPORT,
+                    k -> new SpongeTicketType<Integer, Entity>(net.minecraft.world.server.TicketType.POST_TELEPORT,
+                            (entity, serverWorld) -> ((net.minecraft.entity.Entity) entity).getId(),
+                            (id, serverWorld) -> (Entity) ((ServerWorld) serverWorld).getEntity(id)));
         });
     }
 
