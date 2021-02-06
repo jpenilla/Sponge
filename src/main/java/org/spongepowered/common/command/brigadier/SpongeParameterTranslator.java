@@ -27,6 +27,7 @@ package org.spongepowered.common.command.brigadier;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import net.minecraft.commands.CommandSourceStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.command.Command;
@@ -54,7 +55,6 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import net.minecraft.commands.CommandSourceStack;
 
 public final class SpongeParameterTranslator {
 
@@ -308,6 +308,7 @@ public final class SpongeParameterTranslator {
                 SpongeParameterKey.getSpongeKey(parameter.getKey()),
                 type,
                 parameter.getCompleter(),
+                parameter.modifier().orElse(null),
                 parameter.getValueUsage().orElse(null),
                 suffix
         );
