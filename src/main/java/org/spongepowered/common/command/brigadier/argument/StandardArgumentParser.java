@@ -35,16 +35,16 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import net.kyori.adventure.text.Component;
 import net.minecraft.commands.CommandSourceStack;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.exception.ArgumentParseException;
 import org.spongepowered.api.command.parameter.ArgumentReader;
 import org.spongepowered.api.command.parameter.CommandContext;
 import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueParameter;
+import org.spongepowered.api.command.parameter.managed.ValueParameterModifier;
 import org.spongepowered.common.command.brigadier.SpongeStringReader;
-import org.spongepowered.common.command.brigadier.context.SpongeCommandContext;
 import org.spongepowered.common.command.brigadier.context.SpongeCommandContextBuilder;
-import org.spongepowered.common.command.brigadier.tree.SpongeRootCommandNode;
 
 import java.util.Collection;
 import java.util.List;
@@ -83,8 +83,23 @@ public class StandardArgumentParser<S, T> implements ArgumentParser<T>, ValuePar
     public T parse(
             final Parameter.Key<? super T> key,
             final SpongeCommandContextBuilder contextBuilder,
-            final SpongeStringReader reader) throws CommandSyntaxException {
-        return this.converter.convert(reader, contextBuilder.getCause(), this.type.parse(reader));
+            final SpongeStringReader reader,
+            final @Nullable ValueParameterModifier<T> modifier) throws CommandSyntaxException {
+        final ArgumentReader.Immutable state = reader.getImmutable();
+        final CommandContext.Builder.Transaction transaction = contextBuilder.startTransaction();
+        final T value = this.converter.convert(reader, contextBuilder.getCause(), this.type.parse(reader));
+        if (modifier != null) {
+            try {
+                return modifier.modifyResult(key, reader.getImmutable(), contextBuilder, value).orElse(null);
+            } catch (final ArgumentParseException e) {
+                // reset the state as it did not go through.
+                reader.setState(state);
+                contextBuilder.rollback(transaction);
+                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
+                        .createWithContext(reader, e.getSuperText());
+            }
+        }
+        return value;
     }
 
     @Override

@@ -30,36 +30,40 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.commands.CommandSourceStack;
 import org.spongepowered.api.command.exception.ArgumentParseException;
 import org.spongepowered.api.command.parameter.ArgumentReader;
 import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueParameter;
+import org.spongepowered.api.command.parameter.managed.ValueParameterModifier;
 import org.spongepowered.common.command.brigadier.SpongeStringReader;
 import org.spongepowered.common.command.brigadier.context.SpongeCommandContext;
 import org.spongepowered.common.command.brigadier.context.SpongeCommandContextBuilder;
 
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
-import net.minecraft.commands.CommandSourceStack;
 
 public abstract class AbstractArgumentParser<T> implements ArgumentParser<T>, SuggestionProvider<CommandSourceStack>, ValueParameter<T> {
 
     private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
 
     @Override
-    public T parse(final Parameter.Key<? super T> key, final SpongeCommandContextBuilder contextBuilder, final SpongeStringReader reader)
+    public T parse(final Parameter.Key<? super T> key,
+                   final SpongeCommandContextBuilder contextBuilder,
+                   final SpongeStringReader reader,
+                   final ValueParameterModifier<T> modifier)
             throws CommandSyntaxException {
         final ArgumentReader.Immutable state = reader.getImmutable();
         final org.spongepowered.api.command.parameter.CommandContext.Builder.Transaction transaction = contextBuilder.startTransaction();
         try {
-            final Optional<? extends T> value = this.getValue(key, reader, contextBuilder);
-            contextBuilder.commit(transaction);
-            if (value.isPresent()) {
-                return value.get();
+            T value = this.getValue(key, reader, contextBuilder).orElse(null);
+            if (modifier != null) {
+                value = modifier.modifyResult(key, reader.getImmutable(), contextBuilder, value).orElse(null);
             }
+            contextBuilder.commit(transaction);
+            return value;
         } catch (final ArgumentParseException e) {
             // reset the state as it did not go through.
             reader.setState(state);
@@ -67,7 +71,6 @@ public abstract class AbstractArgumentParser<T> implements ArgumentParser<T>, Su
             throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
                     .createWithContext(reader, e.getSuperText());
         }
-        return null;
     }
 
     @Override

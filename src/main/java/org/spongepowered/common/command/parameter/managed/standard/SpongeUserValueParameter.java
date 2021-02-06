@@ -26,8 +26,6 @@ package org.spongepowered.common.command.parameter.managed.standard;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.kyori.adventure.text.Component;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -37,20 +35,16 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.exception.ArgumentParseException;
 import org.spongepowered.api.command.parameter.ArgumentReader;
-import org.spongepowered.api.command.parameter.CommandContext;
-import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.user.UserManager;
 import org.spongepowered.common.SpongeCommon;
 import org.spongepowered.common.command.brigadier.argument.ResourceKeyedArgumentValueParser;
-import org.spongepowered.common.command.brigadier.context.SpongeCommandContextBuilder;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public final class SpongeUserValueParameter extends ResourceKeyedArgumentValueParser<User> {
@@ -59,13 +53,6 @@ public final class SpongeUserValueParameter extends ResourceKeyedArgumentValuePa
 
     public SpongeUserValueParameter(final ResourceKey key) {
         super(key);
-    }
-
-    @Override
-    public CompletableFuture<Suggestions> listSuggestions(
-            final com.mojang.brigadier.context.CommandContext<?> context,
-            final SuggestionsBuilder builder) {
-        return super.listSuggestions(context, builder);
     }
 
     @Override

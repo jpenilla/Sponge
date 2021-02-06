@@ -31,35 +31,38 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueCompleter;
+import org.spongepowered.api.command.parameter.managed.ValueParameterModifier;
 import org.spongepowered.api.command.parameter.managed.ValueParser;
 import org.spongepowered.api.command.parameter.managed.ValueUsage;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public final class SpongeParameterValueBuilder<T> implements Parameter.Value.Builder<T> {
 
-    private static final ValueCompleter EMPTY_COMPLETER = (context, currentInput) -> ImmutableList.of();
+    private static final ValueCompleter EMPTY_COMPLETER = (context, currentInput) -> Collections.emptyList();
 
     private final Type typeToken;
     private final List<ValueParser<? extends T>> parsers = new ArrayList<>();
     private Parameter.@Nullable Key<T> key;
-    @Nullable private ValueCompleter completer;
-    @Nullable private ValueUsage usage;
-    @Nullable private Predicate<CommandCause> executionRequirements;
+    private @Nullable ValueCompleter completer;
+    private @Nullable ValueUsage usage;
+    private @Nullable Predicate<CommandCause> executionRequirements;
     private boolean consumesAll;
     private boolean isOptional;
     private boolean terminal;
+    private @Nullable ValueParameterModifier<T> modifier;
 
-    public SpongeParameterValueBuilder(@NonNull final Type token) {
+    public SpongeParameterValueBuilder(final @NonNull Type token) {
         this.typeToken = token;
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> setKey(@NonNull final String key) {
+    public Parameter.Value.@NonNull Builder<T> setKey(final @NonNull String key) {
         return this.setKey(new SpongeParameterKey<>(key, this.typeToken));
     }
 
@@ -70,25 +73,31 @@ public final class SpongeParameterValueBuilder<T> implements Parameter.Value.Bui
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> parser(@NonNull final ValueParser<? extends T> parser) {
+    public Parameter.Value.@NonNull Builder<T> parser(final @NonNull ValueParser<? extends T> parser) {
         this.parsers.add(Objects.requireNonNull(parser, "The ValueParser may not be null"));
         return this;
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> setSuggestions(@Nullable final ValueCompleter completer) {
+    public Parameter.Value.@NonNull Builder<T> setSuggestions(final @Nullable ValueCompleter completer) {
         this.completer = completer;
         return this;
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> setUsage(@Nullable final ValueUsage usage) {
+    public Parameter.Value.@NonNull Builder<T> setModifier(final @Nullable ValueParameterModifier<T> modifier) {
+        this.modifier = modifier;
+        return this;
+    }
+
+    @Override
+    public Parameter.Value.@NonNull Builder<T> setUsage(final @Nullable ValueUsage usage) {
         this.usage = usage;
         return this;
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> setRequiredPermission(@Nullable final String permission) {
+    public Parameter.Value.@NonNull Builder<T> setRequiredPermission(final @Nullable String permission) {
         if (permission == null) {
             return this.setRequirements(null);
         } else {
@@ -97,7 +106,7 @@ public final class SpongeParameterValueBuilder<T> implements Parameter.Value.Bui
     }
 
     @Override
-    public Parameter.Value.@NonNull Builder<T> setRequirements(@Nullable final Predicate<CommandCause> executionRequirements) {
+    public Parameter.Value.@NonNull Builder<T> setRequirements(final @Nullable Predicate<CommandCause> executionRequirements) {
         this.executionRequirements = executionRequirements;
         return this;
     }
@@ -164,8 +173,8 @@ public final class SpongeParameterValueBuilder<T> implements Parameter.Value.Bui
                 this.key,
                 this.isOptional,
                 this.consumesAll,
-                this.terminal
-        );
+                this.terminal,
+                this.modifier);
     }
 
     @Override

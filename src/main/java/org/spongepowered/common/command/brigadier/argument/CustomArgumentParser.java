@@ -24,16 +24,17 @@
  */
 package org.spongepowered.common.command.brigadier.argument;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.commands.CommandSourceStack;
 import org.spongepowered.api.command.parameter.ArgumentReader;
 import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueCompleter;
+import org.spongepowered.api.command.parameter.managed.ValueParameterModifier;
 import org.spongepowered.api.command.parameter.managed.ValueParser;
 import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCompletionTypes;
 import org.spongepowered.common.command.brigadier.SpongeStringReader;
@@ -44,12 +45,12 @@ import org.spongepowered.common.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
-import net.minecraft.commands.CommandSourceStack;
+import java.util.stream.Collectors;
 
 /**
  * For use with other argument types
@@ -58,7 +59,7 @@ public final class CustomArgumentParser<T> implements ArgumentParser<T>, Suggest
 
     private static final Pattern INTEGER_PATTERN = Pattern.compile("\\d+");
 
-    private final ImmutableList<ArgumentType<?>> types;
+    private final List<ArgumentType<?>> types;
 
     private final Collection<ValueParser<? extends T>> parsers;
     private final ValueCompleter completer;
@@ -73,32 +74,38 @@ public final class CustomArgumentParser<T> implements ArgumentParser<T>, Suggest
         if (this.parsers.size() == 1) {
             final ValueParser<? extends T> parser = this.parsers.iterator().next();
             if (parser instanceof StandardArgumentParser) {
-                this.types = ImmutableList.copyOf(((StandardArgumentParser<?, ?>) parser).getClientCompletionArgumentType());
+                this.types = Collections.unmodifiableList(((StandardArgumentParser<?, ?>) parser).getClientCompletionArgumentType());
             } else if (this.doesNotRead) {
-                this.types = ImmutableList.of(Constants.Command.STANDARD_STRING_ARGUMENT_TYPE);
+                this.types = Collections.singletonList(Constants.Command.STANDARD_STRING_ARGUMENT_TYPE);
             } else {
                 this.types = parser.getClientCompletionType().stream()
                         .map(x -> ((SpongeClientCompletionType) x).getType())
                         .filter(Objects::nonNull)
-                        .collect(ImmutableList.toImmutableList());
+                        .collect(Collectors.toList());
             }
         } else {
-            this.types = ImmutableList.of(Constants.Command.STANDARD_STRING_ARGUMENT_TYPE);
+            this.types = Collections.singletonList(Constants.Command.STANDARD_STRING_ARGUMENT_TYPE);
         }
     }
 
     @Override
-    public T parse(final Parameter.Key<? super T> key, final SpongeCommandContextBuilder contextBuilder, final SpongeStringReader reader)
+    public T parse(final Parameter.Key<? super T> key,
+                   final SpongeCommandContextBuilder contextBuilder,
+                   final SpongeStringReader reader,
+                   final ValueParameterModifier<T> modifier)
             throws CommandSyntaxException {
         List<Exception> exceptions = null;
         final ArgumentReader.Immutable state = reader.getImmutable();
-        Optional<? extends T> value;
+        T value;
         for (final ValueParser<? extends T> parser : this.parsers) {
             final org.spongepowered.api.command.parameter.CommandContext.Builder.Transaction transaction = contextBuilder.startTransaction();
             try {
-                value = parser.getValue(key, reader, contextBuilder);
+                value = parser.getValue(key, reader, contextBuilder).orElse(null);
+                if (modifier != null) {
+                    value = modifier.modifyResult(key, reader.getImmutable(), contextBuilder, value).orElse(null);
+                }
                 contextBuilder.commit(transaction);
-                return value.orElse(null);
+                return value;
             } catch (final Exception e) {
                 if (exceptions == null) {
                     exceptions = new ArrayList<>();
@@ -114,9 +121,6 @@ public final class CustomArgumentParser<T> implements ArgumentParser<T>, Suggest
         if (exceptions != null) {
             throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
                     .createWithContext(reader, exceptions);
-            /* throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException()
-                    .createWithContext(reader,
-                            TextComponent.join(TextComponent.newline(), exceptions.stream().map(ArgumentParseException::getSuperText).collect(Collectors.toList()))); */
         }
 
         // TODO: Check this - don't want Brig to blow up. If that happens, mandate everything returns an object.
@@ -148,7 +152,7 @@ public final class CustomArgumentParser<T> implements ArgumentParser<T>, Suggest
 
     @Override
     public Collection<String> getExamples() {
-        return ImmutableList.of();
+        return Collections.emptyList();
     }
 
     @Override
@@ -157,8 +161,7 @@ public final class CustomArgumentParser<T> implements ArgumentParser<T>, Suggest
     }
 
     @Override
-    public CompletableFuture<Suggestions> getSuggestions(final CommandContext<CommandSourceStack> context, final SuggestionsBuilder builder)
-            throws CommandSyntaxException {
+    public CompletableFuture<Suggestions> getSuggestions(final CommandContext<CommandSourceStack> context, final SuggestionsBuilder builder) {
         return this.listSuggestions(context, builder);
     }
 }
